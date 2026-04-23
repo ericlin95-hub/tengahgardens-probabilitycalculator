@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tengah Gardens Residences — Unit Booking Probability</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f3f6f3; --surface:#fff; --surface2:#eef3ee; --border:#d4e0d4;
+  --accent:#2d6a4f; --al:#e8f5ee; --text:#1a2e23; --muted:#6b8f72;
+  --shadow:0 1px 3px rgba(26,46,35,.07),0 4px 16px rgba(26,46,35,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;padding:32px 16px 80px}
+
+.header{max-width:1060px;margin:0 auto 28px}
+.hi{background:linear-gradient(135deg,#1b4332 0%,#2d6a4f 55%,#40916c 100%);border-radius:16px;padding:26px 32px;position:relative;overflow:hidden}
+.hi::before{content:’’;position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hi::after{content:’’;position:absolute;bottom:-60px;right:80px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04)}
+.htag{font-size:10px;letter-spacing:.22em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:8px}
+.header h1{font-family:‘Syne’,sans-serif;font-size:clamp(22px,4.5vw,40px);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1}
+.header h1 span{color:rgba(255,255,255,.45);font-weight:400}
+.hsub{font-size:11px;color:rgba(255,255,255,.4);margin-top:8px;letter-spacing:.04em}
+
+.layout{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.layout{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+
+.card{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:22px;box-shadow:var(–shadow)}
+.ct{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(–accent);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.ct::after{content:’’;flex:1;height:1px;background:var(–border)}
+
+label{display:block;font-size:10px;letter-spacing:.1em;color:var(–muted);text-transform:uppercase;margin-bottom:6px}
+input[type=number]{width:100%;background:var(–surface2);border:1px solid var(–border);border-radius:8px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+input[type=number]:focus{border-color:var(–accent);box-shadow:0 0 0 3px rgba(45,106,79,.12)}
+.ir{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.ig{margin-bottom:14px}
+.divider{height:1px;background:var(–border);margin:14px 0}
+.share-pill{display:inline-block;padding:1px 8px;background:var(–al);color:var(–accent);border-radius:10px;font-size:11px;font-weight:500;margin-left:6px}
+
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1.5px solid var(–border);background:var(–surface2);cursor:pointer;user-select:none;transition:all .15s}
+.chip:hover{border-color:var(–accent);background:var(–al)}
+.chip.active{border-color:var(–accent);background:var(–al)}
+.chip-lbl{font-size:10px;letter-spacing:.04em;color:var(–text)}
+.chip-sub{font-size:9px;color:var(–muted)}
+.chip.active .chip-lbl{color:var(–accent);font-weight:500}
+
+.stack-table{width:100%;border-collapse:collapse;font-size:11px}
+.stack-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(–muted);text-align:left;padding:7px 10px;border-bottom:1.5px solid var(–border);background:var(–surface2);white-space:nowrap}
+.stack-table td{padding:8px 10px;border-bottom:1px solid var(–surface2);vertical-align:middle}
+.stack-table tr:last-child td{border-bottom:none}
+.stack-table tr:hover td{background:var(–al)}
+.tgh td{background:var(–surface2)!important;padding:5px 10px!important}
+.tgh-inner{display:flex;align-items:center;justify-content:space-between}
+.tgh-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(–accent);font-weight:500}
+.tgh-btns{display:flex;gap:6px}
+.tgh-btn{font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;border:1px solid var(–border);background:var(–surface);color:var(–muted);cursor:pointer;transition:all .12s}
+.tgh-btn:hover{border-color:var(–accent);color:var(–accent);background:var(–al)}
+.sbadge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;background:var(–al);color:var(–accent);font-weight:500}
+.scheck{accent-color:var(–accent);width:14px;height:14px;cursor:pointer}
+.avail-units{font-weight:600;color:var(–text)}
+.avail-zero{color:#e03131!important}
+.auto-val{color:var(–accent);font-size:11px;font-weight:500}
+.ii{padding:5px 8px!important;font-size:11px!important;width:72px!important}
+.excl-badge{font-size:9px;color:var(–muted);font-style:italic;margin-left:3px}
+
+.mode-row{display:flex;gap:8px;margin-bottom:14px}
+.mode-btn{flex:1;padding:8px;border:1.5px solid var(–border);background:var(–surface2);border-radius:8px;font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(–muted);cursor:pointer;transition:all .15s;text-align:center}
+.mode-btn.active{border-color:var(–accent);background:var(–al);color:var(–accent);font-weight:500}
+
+.btn{width:100%;padding:15px;background:var(–accent);color:#fff;font-family:‘Syne’,sans-serif;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;border:none;border-radius:10px;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 4px 14px rgba(45,106,79,.3)}
+.btn:hover{background:#1b4332;transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,106,79,.4)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{background:none;border:1.5px dashed var(–border);color:var(–muted);font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(–accent);color:var(–accent);background:var(–al)}
+.del-btn{background:none;border:none;color:var(–muted);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}
+.del-btn:hover{background:#fff0f0;color:#e03131}
+
+.result-hero{text-align:center;padding:28px 16px 22px;border-radius:12px;margin-bottom:16px;border:1px solid var(–border)}
+.rpct{font-family:‘Syne’,sans-serif;font-size:72px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.rlbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(–muted);margin-top:6px}
+.rverdict{display:inline-block;margin-top:14px;padding:5px 16px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+
+/* Story layout — identical structure to Vela Bay */
+.story{display:flex;flex-direction:column;gap:0}
+.story-step{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(–surface2)}
+.story-step:last-child{border-bottom:none}
+.story-step-danger .story-step-num{background:#e03131}
+.story-step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(–accent);color:#fff;font-family:‘Syne’,sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.story-step-body{flex:1;min-width:0}
+.story-step-title{font-family:‘Syne’,sans-serif;font-size:13px;font-weight:700;color:var(–text);margin-bottom:8px}
+.story-step-body p{font-size:12px;color:var(–muted);line-height:1.7}
+.story-step-body p strong{color:var(–text)}
+.story-step-sub{font-size:11px;color:var(–muted);padding:4px 0 4px 12px;border-left:2px solid var(–border);margin:4px 0;line-height:1.5}
+.story-step-sub strong{color:var(–text)}
+.story-formula{font-size:12px;background:var(–surface2);border:1px solid var(–border);border-radius:8px;padding:10px 14px;margin:10px 0;color:var(–text);line-height:1.6}
+.story-formula strong{color:var(–accent)}
+.story-stack-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(–surface2);flex-wrap:wrap}
+.story-stack-row:last-child{border-bottom:none}
+.story-stack-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;background:var(–al);color:var(–accent);font-weight:600;white-space:nowrap}
+.story-stack-detail{font-size:11px;color:var(–muted)}
+.story-stack-detail strong{color:var(–text)}
+
+.sens-table{width:100%;border-collapse:collapse;font-size:11px}
+.sens-table th{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(–muted);padding:7px 10px;text-align:left;border-bottom:1.5px solid var(–border);background:var(–surface2)}
+.sens-table td{padding:9px 10px;border-bottom:1px solid var(–surface2)}
+.sens-table tr.hl td{background:var(–al)}
+.pb-wrap{display:flex;align-items:center;gap:8px}
+.pb{height:6px;border-radius:3px;flex-shrink:0;min-width:2px}
+.hidden{display:none}
+.note{font-size:10px;color:var(–muted);padding:10px 14px;background:var(–al);border-radius:7px;border-left:3px solid var(–accent);line-height:1.7}
+.empty-state{text-align:center;padding:20px;color:var(–muted);font-size:11px;letter-spacing:.06em}
+.dfi{width:70px!important}
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <div class="hi">
+    <div class="htag">PropNex · New Launch Analytics</div>
+    <h1>Tengah Gardens Residences <span>/ Probability Calculator</span></h1>
+    <div class="hsub">863 units · 11–27 Tengah Garden Avenue · EC · Queue booking chance estimator</div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="card">
+    <div class="ct">Market Data</div>
+    <div class="ir">
+      <div class="ig"><label>Total Cheques</label><input type="number" id="totalCheque" value="1989" min="1"></div>
+      <div class="ig"><label>PN Cheques</label><input type="number" id="pnCheque" value="1088" min="1" oninput="syncShare()"></div>
+    </div>
+    <div class="ig">
+      <label>PN Market Share % <span class="share-pill" id="shareDisplay">54.7%</span></label>
+      <input type="number" id="pnShare" value="54.7" min="1" max="100" step="0.1" oninput="syncCheque()">
+    </div>
+    <div class="divider"></div>
+    <div class="ir">
+      <div class="ig"><label>Priority / VIP</label><input type="number" id="priority" value="0" min="0"></div>
+      <div class="ig"><label>Bulk / Developer</label><input type="number" id="bulk" value="0" min="0"></div>
+    </div>
+    <div class="note">PN Queue = PN Cheques − Priority / VIP − Bulk / Developer</div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Client Setup</div>
+    <div class="ig"><label>Client Queue Number</label><input type="number" id="queueNo" value="200" min="1"></div>
+    <div class="ig">
+      <label>Bedroom Type(s) — select all that apply</label>
+      <div class="chip-grid" id="typeGrid"></div>
+    </div>
+  </div>
+
+  <div class="card full">
+    <div class="ct">Stack Selection &amp; PN Interest</div>
+    <div class="note" style="margin-bottom:14px">Pre-filled with each stack's actual residential floors per elevation chart. Sky Terrace floors automatically excluded. Dual-use stacks (e.g. Stack 16 = 1BR on fl2, 2BR Prem on fl3–16) appear as separate entries per type.</div>
+    <div class="mode-row">
+      <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Heatmap data</div>
+      <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual override</div>
+    </div>
+    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">PN interest loaded from PropNex heatmap data. Scaled down automatically if client floor range is narrower than the full stack. Switch to Manual to override any stack.</div>
+    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Enter exact PN interest to override. Leave blank to use the heatmap figure for that stack.</div>
+    <div style="overflow-x:auto">
+      <table class="stack-table">
+        <thead>
+          <tr>
+            <th>✓</th><th>Stack</th><th>Block</th><th>Type</th><th>Size (sqft)</th>
+            <th>Stack Floors</th><th>Client Floor Range</th><th>Avail. Units</th>
+            <th id="intHdr">PN Interest (heatmap)</th>
+          </tr>
+        </thead>
+        <tbody id="stackBody">
+          <tr><td colspan="9" class="empty-state">Select a bedroom type above to load stacks</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card full">
+    <div class="ct">Dropout Rate by Queue Band</div>
+    <div class="note" style="margin-bottom:16px">% of ALL buyers (all agencies) in each band who don't end up purchasing. Applied before PN share to get effective competition.</div>
+    <div style="overflow-x:auto">
+      <table class="stack-table">
+        <thead><tr><th>Band</th><th>Queue From</th><th>Queue To</th><th>Dropout %</th><th style="width:32px"></th></tr></thead>
+        <tbody id="dropoutBody"></tbody>
+      </table>
+    </div>
+    <button class="btn-ghost" onclick="addBand()" style="margin-top:12px">+ Add band</button>
+  </div>
+
+  <div class="card full">
+    <button class="btn" onclick="calculate()">Calculate Probability</button>
+  </div>
+
+  <div class="card full hidden" id="resSection">
+    <div class="ct">Result</div>
+    <div class="result-hero" id="resHero">
+      <div class="rpct" id="resPct">—</div>
+      <div class="rlbl">Estimated chance of securing a unit</div>
+      <div class="rverdict" id="resVerdict"></div>
+    </div>
+    <div class="story" id="storyBox"></div>
+  </div>
+
+  <div class="card full hidden" id="sensSection">
+    <div class="ct">How Does Queue Position Affect the Odds?</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      This table shows what your client's chances would be at different queue numbers, so you can set realistic expectations based on where they actually land.
+    </p>
+    <div style="overflow-x:auto">
+      <table class="sens-table">
+        <thead><tr><th>Queue #</th><th>Est. Competing Buyers</th><th>Units Still Available</th><th>Chance</th><th style="width:180px">Verdict</th></tr></thead>
+        <tbody id="sensBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px" class="note">Showing ±200 queue positions around your client in steps of 50. Dropout rates applied throughout.</div>
+  </div>
+
+</div>
+
+<script>
+// ── STACK DATA ────────────────────────────────────────────────────────────────
+// Verified against PropNex elevation chart (Eric Lin, CEA R066358F)
+// pni = PropNex heatmap interest per stack (0 = falls back to proportional auto-spread)
+// Sky Terraces: Stack 11 excl fl10,11 | Stack 12 excl fl11 | Stack 19 excl fl10,11 | Stack 26 excl fl10,11
+// Dual-use stacks: 1BR at fl2 shown separately; upper type shown as fl3–16 entry
+const STACKS = [
+  // ── 1-Bedroom (6 units) — not in heatmap, pni:0 ────────────────────────────
+  {id:'05',  block:11, type:'1BR',   lbl:'1BR · 517 sqft',              sz:517,  fl:[2,2],   exclude:[], pni:0},
+  {id:'16',  block:15, type:'1BR',   lbl:'1BR · 484 sqft',              sz:484,  fl:[2,2],   exclude:[], pni:0},
+  {id:'24',  block:17, type:'1BR',   lbl:'1BR · 517 sqft',              sz:517,  fl:[2,2],   exclude:[], pni:0},
+  {id:'31',  block:19, type:'1BR',   lbl:'1BR · 484 sqft',              sz:484,  fl:[2,2],   exclude:[], pni:0},
+  {id:'39',  block:21, type:'1BR',   lbl:'1BR · 484 sqft',              sz:484,  fl:[2,2],   exclude:[], pni:0},
+  {id:'56',  block:27, type:'1BR',   lbl:'1BR · 517 sqft',              sz:517,  fl:[2,2],   exclude:[], pni:0},
+
+  // ── 2-Bedroom 624 sqft (120 units) ─────────────────────────────────────────
+  {id:'13',  block:15, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:48},
+  {id:'20',  block:15, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:14},
+  {id:'21',  block:17, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:18},
+  {id:'27',  block:17, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:10},
+  {id:'28',  block:19, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:17},
+  {id:'35',  block:19, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:6},
+  {id:'36',  block:21, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:7},
+  {id:'43',  block:21, type:'2BR',   lbl:'2BR · 624 sqft',              sz:624,  fl:[2,16],  exclude:[], pni:7},
+
+  // ── 2BR Premium (115 units) ─────────────────────────────────────────────────
+  {id:'01',  block:11, type:'2BRP',  lbl:'2BR Prem · 657 sqft',         sz:657,  fl:[3,16],  exclude:[], pni:21},
+  {id:'08',  block:11, type:'2BRP',  lbl:'2BR Prem · 657 sqft',         sz:657,  fl:[3,16],  exclude:[], pni:22},
+  {id:'17',  block:15, type:'2BRP',  lbl:'2BR Prem · 667 sqft',         sz:667,  fl:[2,16],  exclude:[], pni:23},
+  {id:'32',  block:19, type:'2BRP',  lbl:'2BR Prem · 667 sqft',         sz:667,  fl:[2,16],  exclude:[], pni:14},
+  {id:'40',  block:21, type:'2BRP',  lbl:'2BR Prem · 667 sqft',         sz:667,  fl:[2,16],  exclude:[], pni:7},
+  {id:'16U', block:15, type:'2BRP',  lbl:'2BR Prem · 667 sqft (upper)', sz:667,  fl:[3,16],  exclude:[], pni:21, displayId:'16'},
+  {id:'31U', block:19, type:'2BRP',  lbl:'2BR Prem · 667 sqft (upper)', sz:667,  fl:[3,16],  exclude:[], pni:21, displayId:'31'},
+  {id:'39U', block:21, type:'2BRP',  lbl:'2BR Prem · 667 sqft (upper)', sz:667,  fl:[3,16],  exclude:[], pni:48, displayId:'39'},
+
+  // ── 2BR Premium + Study 753 sqft (102 units) ────────────────────────────────
+  {id:'04',  block:11, type:'2BRPS', lbl:'2BR+Study · 753 sqft',        sz:753,  fl:[2,16],  exclude:[], pni:124},
+  {id:'52',  block:27, type:'2BRPS', lbl:'2BR+Study · 753 sqft',        sz:753,  fl:[2,16],  exclude:[], pni:12},
+  {id:'55',  block:27, type:'2BRPS', lbl:'2BR+Study · 753 sqft',        sz:753,  fl:[2,16],  exclude:[], pni:8},
+  {id:'59',  block:27, type:'2BRPS', lbl:'2BR+Study · 753 sqft',        sz:753,  fl:[2,16],  exclude:[], pni:4},
+  {id:'05U', block:11, type:'2BRPS', lbl:'2BR+Study · 753 sqft (upper)',sz:753,  fl:[3,16],  exclude:[], pni:42, displayId:'05'},
+  {id:'24U', block:17, type:'2BRPS', lbl:'2BR+Study · 753 sqft (upper)',sz:753,  fl:[3,16],  exclude:[], pni:6,  displayId:'24'},
+  {id:'56U', block:27, type:'2BRPS', lbl:'2BR+Study · 753 sqft (upper)',sz:753,  fl:[3,16],  exclude:[], pni:2,  displayId:'56'},
+
+  // ── 3-Bedroom (97 units) ─────────────────────────────────────────────────────
+  {id:'23',  block:17, type:'3BR',   lbl:'3BR · 797 sqft',              sz:797,  fl:[2,16],  exclude:[], pni:34},
+  {id:'07',  block:11, type:'3BR',   lbl:'3BR · 818 sqft',              sz:818,  fl:[4,16],  exclude:[], pni:20},
+  {id:'02',  block:11, type:'3BR',   lbl:'3BR · 829 sqft',              sz:829,  fl:[4,16],  exclude:[], pni:5},
+  {id:'19',  block:15, type:'3BR',   lbl:'3BR · 829 sqft',              sz:829,  fl:[2,16],  exclude:[10,11], pni:10},
+  {id:'34',  block:19, type:'3BR',   lbl:'3BR · 829 sqft',              sz:829,  fl:[3,16],  exclude:[], pni:3},
+  {id:'42',  block:21, type:'3BR',   lbl:'3BR · 829 sqft',              sz:829,  fl:[3,16],  exclude:[], pni:16},
+  {id:'54',  block:27, type:'3BR',   lbl:'3BR · 829 sqft',              sz:829,  fl:[2,16],  exclude:[], pni:27},
+
+  // ── 3BR with Store (175 units) ───────────────────────────────────────────────
+  {id:'15',  block:15, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[], pni:16},
+  {id:'22',  block:17, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[], pni:13},
+  {id:'26',  block:17, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[10,11], pni:4},
+  {id:'30',  block:19, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[], pni:24},
+  {id:'37',  block:21, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[], pni:18},
+  {id:'57',  block:27, type:'3BRS',  lbl:'3BR+Store · 904 sqft',        sz:904,  fl:[2,16],  exclude:[], pni:31},
+  {id:'12',  block:13, type:'3BRS',  lbl:'3BR+Store · 969 sqft',        sz:969,  fl:[2,16],  exclude:[11], pni:15},
+  {id:'14',  block:15, type:'3BRS',  lbl:'3BR+Store · 980 sqft',        sz:980,  fl:[2,16],  exclude:[], pni:5},
+  {id:'25',  block:17, type:'3BRS',  lbl:'3BR+Store · 990 sqft',        sz:990,  fl:[2,16],  exclude:[], pni:0},
+  {id:'11',  block:13, type:'3BRS',  lbl:'3BR+Store · 1,012 sqft',      sz:1012, fl:[2,16],  exclude:[10,11], pni:13},
+  {id:'09',  block:13, type:'3BRS',  lbl:'3BR+Store · 1,012 sqft',      sz:1012, fl:[2,16],  exclude:[], pni:91},
+  {id:'10',  block:13, type:'3BRS',  lbl:'3BR+Store · 1,023 sqft',      sz:1023, fl:[2,16],  exclude:[], pni:19},
+
+  // ── 3BR Premium with Yard 1,033 sqft (75 units) ──────────────────────────────
+  {id:'18',  block:15, type:'3BRPY', lbl:'3BR Prem Yard · 1,033 sqft',  sz:1033, fl:[2,16],  exclude:[], pni:8},
+  {id:'33',  block:19, type:'3BRPY', lbl:'3BR Prem Yard · 1,033 sqft',  sz:1033, fl:[2,16],  exclude:[], pni:7},
+  {id:'38',  block:21, type:'3BRPY', lbl:'3BR Prem Yard · 1,033 sqft',  sz:1033, fl:[2,16],  exclude:[], pni:36},
+  {id:'41',  block:21, type:'3BRPY', lbl:'3BR Prem Yard · 1,033 sqft',  sz:1033, fl:[2,16],  exclude:[], pni:4},
+  {id:'58',  block:27, type:'3BRPY', lbl:'3BR Prem Yard · 1,033 sqft',  sz:1033, fl:[2,16],  exclude:[], pni:6},
+
+  // ── 4BR with Yard (88 units) ─────────────────────────────────────────────────
+  {id:'44',  block:23, type:'4BRY',  lbl:'4BR Yard · 1,130 sqft',       sz:1130, fl:[3,16],  exclude:[], pni:12},
+  {id:'47',  block:23, type:'4BRY',  lbl:'4BR Yard · 1,130 sqft',       sz:1130, fl:[3,16],  exclude:[], pni:9},
+  {id:'46',  block:23, type:'4BRY',  lbl:'4BR Yard · 1,130 sqft',       sz:1130, fl:[2,16],  exclude:[], pni:19},
+  {id:'49',  block:25, type:'4BRY',  lbl:'4BR Yard · 1,130 sqft',       sz:1130, fl:[2,16],  exclude:[], pni:8},
+  {id:'03',  block:11, type:'4BRY',  lbl:'4BR Yard · 1,141 sqft',       sz:1141, fl:[2,16],  exclude:[], pni:59},
+  {id:'29',  block:19, type:'4BRY',  lbl:'4BR Yard · 1,141 sqft',       sz:1141, fl:[2,16],  exclude:[], pni:7},
+
+  // ── 4BR Premium with Yard (85 units) ─────────────────────────────────────────
+  {id:'06',  block:11, type:'4BRPY', lbl:'4BR Prem Yard · 1,259 sqft',  sz:1259, fl:[3,15],  exclude:[], pni:6},
+  {id:'53',  block:27, type:'4BRPY', lbl:'4BR Prem Yard · 1,259 sqft',  sz:1259, fl:[2,15],  exclude:[], pni:17},
+  {id:'45',  block:23, type:'4BRPY', lbl:'4BR Prem Yard · 1,249 sqft',  sz:1249, fl:[3,16],  exclude:[], pni:4},
+  {id:'50',  block:25, type:'4BRPY', lbl:'4BR Prem Yard · 1,249 sqft',  sz:1249, fl:[2,16],  exclude:[], pni:9},
+  {id:'51',  block:25, type:'4BRPY', lbl:'4BR Prem Yard · 1,249 sqft',  sz:1249, fl:[2,15],  exclude:[], pni:9},
+  {id:'48',  block:25, type:'4BRPY', lbl:'4BR Prem Yard · 1,249 sqft',  sz:1249, fl:[2,16],  exclude:[], pni:2},
+];
+
+const TYPES = [
+  {k:'1BR',   n:'1-Bedroom',             s:'484–517 sqft'},
+  {k:'2BR',   n:'2-Bedroom',             s:'624 sqft'},
+  {k:'2BRP',  n:'2BR Premium',           s:'657–667 sqft'},
+  {k:'2BRPS', n:'2BR Premium + Study',   s:'753 sqft'},
+  {k:'3BR',   n:'3-Bedroom',             s:'797–829 sqft'},
+  {k:'3BRS',  n:'3BR with Store',        s:'904–1,023 sqft'},
+  {k:'3BRPY', n:'3BR Premium with Yard', s:'1,033 sqft'},
+  {k:'4BRY',  n:'4BR with Yard',         s:'1,130–1,141 sqft'},
+  {k:'4BRPY', n:'4BR Premium with Yard', s:'1,249–1,259 sqft'},
+];
+
+// Unit mix % — based on 863 total (price analyzer ground truth)
+const PCT = {
+  '1BR':   6/863*100,
+  '2BR':   120/863*100,
+  '2BRP':  115/863*100,
+  '2BRPS': 102/863*100,
+  '3BR':   97/863*100,
+  '3BRS':  175/863*100,
+  '3BRPY': 75/863*100,
+  '4BRY':  88/863*100,
+  '4BRPY': 85/863*100,
+};
+
+let iMode = 'auto';
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function availUnits(s) {
+  const minEl=document.querySelector(`.fl-min[data-id="${s.id}"]`);
+  const maxEl=document.querySelector(`.fl-max[data-id="${s.id}"]`);
+  const mn=minEl?(+minEl.value||s.fl[0]):s.fl[0];
+  const mx=maxEl?(+maxEl.value||s.fl[1]):s.fl[1];
+  const from=Math.max(s.fl[0],Math.min(mn,s.fl[1]));
+  const to  =Math.min(s.fl[1],Math.max(mx,from));
+  let c=0;
+  for(let f=from;f<=to;f++) if(!s.exclude.includes(f)) c++;
+  return c;
+}
+function totalStackUnits(s) {
+  let c=0;
+  for(let f=s.fl[0];f<=s.fl[1];f++) if(!s.exclude.includes(f)) c++;
+  return c;
+}
+function selTypes()   { return [...document.querySelectorAll('#typeGrid .chip.active')].map(c=>c.dataset.k); }
+function checkedIds() { return [...document.querySelectorAll('.scheck:checked')].map(c=>c.dataset.id); }
+function getPNQ()     { return Math.max(0,(+document.getElementById('pnCheque').value||0)-(+document.getElementById('priority').value||0)-(+document.getElementById('bulk').value||0)); }
+function verdict(p) {
+  if(p>=70) return{c:'#0891b2',l:'Very High',hb:'#ecfbff',vb:'rgba(8,145,178,.1)'};
+  if(p>=50) return{c:'#0ca678',l:'Likely',   hb:'#edfaf5',vb:'rgba(12,166,120,.1)'};
+  if(p>=30) return{c:'#e67700',l:'Moderate', hb:'#fff8ec',vb:'rgba(230,119,0,.1)'};
+  if(p>0)   return{c:'#e03131',l:'Low',      hb:'#fff0f0',vb:'rgba(224,49,49,.1)'};
+  return         {c:'#e03131',l:'Very Low',  hb:'#fff0f0',vb:'rgba(224,49,49,.1)'};
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────────────────
+function syncShare() {
+  const t=+document.getElementById('totalCheque').value||1;
+  const p=+document.getElementById('pnCheque').value||0;
+  const pct=(p/t*100).toFixed(1);
+  document.getElementById('pnShare').value=pct;
+  document.getElementById('shareDisplay').textContent=pct+'%';
+  refreshAutoVals();
+}
+function syncCheque() {
+  const t=+document.getElementById('totalCheque').value||1;
+  const pct=+document.getElementById('pnShare').value||0;
+  document.getElementById('pnCheque').value=Math.round(t*pct/100);
+  document.getElementById('shareDisplay').textContent=parseFloat(pct).toFixed(1)+'%';
+  refreshAutoVals();
+}
+
+// ── TYPE CHIPS ────────────────────────────────────────────────────────────────
+function buildTypeChips() {
+  const g=document.getElementById('typeGrid');
+  g.innerHTML='';
+  TYPES.forEach(t=>{
+    const c=document.createElement('div');
+    c.className='chip';c.dataset.k=t.k;
+    c.innerHTML=`<span class="chip-lbl">${t.n}</span><span class="chip-sub">${t.s}</span>`;
+    c.addEventListener('click',()=>{c.classList.toggle('active');renderTable();});
+    g.appendChild(c);
+  });
+}
+
+// ── FLOOR CHANGE ──────────────────────────────────────────────────────────────
+function onStackFloorChange(id) {
+  const s=STACKS.find(x=>x.id===id);if(!s)return;
+  const u=availUnits(s);
+  const el=document.querySelector(`.avail-units[data-id="${id}"]`);
+  if(el){el.textContent=u;el.classList.toggle('avail-zero',u===0);}
+  refreshAutoVals();
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const types=selTypes();
+  const tbody=document.getElementById('stackBody');
+  tbody.innerHTML='';
+  if(!types.length){
+    tbody.innerHTML='<tr><td colspan="9" class="empty-state">Select a bedroom type above to load stacks</td></tr>';
+    return;
+  }
+  types.forEach(type=>{
+    const td=TYPES.find(t=>t.k===type);
+    const stacks=STACKS.filter(s=>s.type===type);
+    if(!stacks.length)return;
+    const hdr=document.createElement('tr');
+    hdr.className='tgh';
+    hdr.innerHTML=`<td colspan="9"><div class="tgh-inner">
+      <span class="tgh-lbl">${td.n} — ${td.s}</span>
+      <div class="tgh-btns">
+        <button class="tgh-btn" onclick="setGroup('${type}',true)">Select all</button>
+        <button class="tgh-btn" onclick="setGroup('${type}',false)">Deselect all</button>
+      </div></div></td>`;
+    tbody.appendChild(hdr);
+    stacks.forEach(s=>{
+      const u=availUnits(s);
+      const dispId=s.displayId||s.id;
+      const exclNote=s.exclude.length?`<span class="excl-badge">(Sky Terrace fl.${s.exclude.join(',')})</span>`:'';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td><input type="checkbox" class="scheck" data-id="${s.id}" data-type="${s.type}" checked onchange="refreshAutoVals()"></td>
+        <td><span class="sbadge">Stack ${dispId}</span></td>
+        <td style="color:var(--muted)">Blk ${s.block}</td>
+        <td style="color:var(--muted);font-size:10px">${s.lbl}</td>
+        <td>${s.sz.toLocaleString()}</td>
+        <td style="color:var(--muted);white-space:nowrap">${s.fl[0]}–${s.fl[1]}${exclNote}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="number" class="ii fl-min" data-id="${s.id}" value="${s.fl[0]}" min="${s.fl[0]}" max="${s.fl[1]}" style="width:52px!important" oninput="onStackFloorChange('${s.id}')">
+            <span style="font-size:10px;color:var(--muted)">–</span>
+            <input type="number" class="ii fl-max" data-id="${s.id}" value="${s.fl[1]}" min="${s.fl[0]}" max="${s.fl[1]}" style="width:52px!important" oninput="onStackFloorChange('${s.id}')">
+          </div>
+        </td>
+        <td><span class="avail-units${u===0?' avail-zero':''}" data-id="${s.id}">${u}</span></td>
+        <td>
+          <span class="auto-val" data-id="${s.id}" style="display:${iMode==='auto'?'block':'none'}">—</span>
+          <input type="number" class="ii" data-id="${s.id}" min="0" placeholder="auto" style="display:${iMode==='manual'?'block':'none'}">
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+  refreshAutoVals();
+}
+
+function setGroup(type,checked){
+  document.querySelectorAll(`.scheck[data-type="${type}"]`).forEach(c=>c.checked=checked);
+  refreshAutoVals();
+}
+
+// ── INTEREST MODE ─────────────────────────────────────────────────────────────
+function setMode(m){
+  iMode=m;
+  document.getElementById('modeAutoBtn').classList.toggle('active',m==='auto');
+  document.getElementById('modeManualBtn').classList.toggle('active',m==='manual');
+  document.getElementById('autoNote').classList.toggle('hidden',m!=='auto');
+  document.getElementById('manualNote').classList.toggle('hidden',m!=='manual');
+  document.getElementById('intHdr').textContent=m==='auto'?'PN Interest (heatmap)':'PN Interest (override)';
+  document.querySelectorAll('.auto-val').forEach(el=>el.style.display=m==='auto'?'block':'none');
+  // Only toggle manual interest inputs in the stack table, not dropout inputs
+  document.querySelectorAll('#stackBody .ii').forEach(el=>el.style.display=m==='manual'?'block':'none');
+}
+
+// ── AUTO INTEREST ─────────────────────────────────────────────────────────────
+function refreshAutoVals(){
+  const pnQ=getPNQ();
+  selTypes().forEach(type=>{
+    const pct=PCT[type]||0;
+    const pnT=Math.round(pnQ*pct/100);
+    const all=STACKS.filter(s=>s.type===type);
+    const totAv=all.reduce((n,s)=>n+availUnits(s),0);
+    STACKS.filter(s=>s.type===type).forEach(s=>{
+      const el=document.querySelector(`.auto-val[data-id="${s.id}"]`);
+      if(!el)return;
+      if(s.pni>0){
+        // Heatmap pni available — scale by client floor range
+        const totalStack=totalStackUnits(s);
+        const avail=availUnits(s);
+        el.textContent=totalStack>0?Math.round(s.pni*avail/totalStack):s.pni;
+      } else {
+        // No heatmap — spread proportionally across all stacks of this type
+        const u=availUnits(s);
+        el.textContent=totAv?Math.round(pnT*u/totAv):0;
+      }
+    });
+  });
+}
+
+// ── DROPOUT ───────────────────────────────────────────────────────────────────
+let bands=[{from:1,to:300,pct:5},{from:301,to:500,pct:10},{from:501,to:700,pct:15},{from:701,to:900,pct:20},{from:901,to:1200,pct:30},{from:1201,to:9999,pct:40}];
+function renderBands(){
+  const tbody=document.getElementById('dropoutBody');
+  tbody.innerHTML='';
+  bands.forEach((b,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-size:10px">Band ${i+1}</td>
+      <td><input type="number" class="ii dfi" value="${b.from}" min="1" oninput="bands[${i}].from=+this.value"></td>
+      <td><input type="number" class="ii dfi" value="${b.to===9999?'':b.to}" placeholder="∞" min="1" oninput="bands[${i}].to=+this.value||9999"></td>
+      <td><input type="number" class="ii dfi" value="${b.pct}" min="0" max="100" step="1" oninput="bands[${i}].pct=+this.value"></td>
+      <td><button class="del-btn" onclick="removeBand(${i})">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addBand(){bands.push({from:bands[bands.length-1]?.to+1||1,to:9999,pct:30});renderBands();}
+function removeBand(i){if(bands.length<=1)return;bands.splice(i,1);renderBands();}
+
+// Identical to Vela Bay: uses raw pnCheque (not pnQ) for market share calculation
+function applyDropout(qAhead,totalCheque,pnQ,pnCheque,pnInt){
+  if(!totalCheque||!qAhead)return 0;
+  let effAllBuyers=0;
+  bands.forEach(b=>{
+    const s=Math.max(b.from,1),e=Math.min(b.to,qAhead);
+    if(e<s)return;
+    effAllBuyers+=(e-s+1)*(1-b.pct/100);
+  });
+  const pnShare=pnCheque/Math.max(totalCheque,1); // raw PN share, matching Vela Bay
+  const totalMarketInterest=pnInt/Math.max(pnShare,0.01);
+  const marketInterestRate=totalMarketInterest/totalCheque;
+  return effAllBuyers*marketInterestRate;
+}
+
+// ── CALCULATE ─────────────────────────────────────────────────────────────────
+function calculate(){
+  const totalCheque=+document.getElementById('totalCheque').value||0;
+  const pnCheque   =+document.getElementById('pnCheque').value||0;
+  const priority   =+document.getElementById('priority').value||0;
+  const bulk       =+document.getElementById('bulk').value||0;
+  const pnQ        =Math.max(0,pnCheque-priority-bulk);
+  const clientQ    =+document.getElementById('queueNo').value||1;
+  const types      =selTypes();
+  const ids        =checkedIds();
+  if(!types.length){alert('Select at least one bedroom type.');return;}
+  if(!ids.length)  {alert('Select at least one stack.');return;}
+
+  let totalUnits=0,pnInt=0;
+  const bd=[];
+
+  types.forEach(type=>{
+    const pct=PCT[type]||0;
+    const pnT=Math.round(pnQ*pct/100);
+    const all=STACKS.filter(s=>s.type===type);
+    const totAv=all.reduce((n,s)=>n+availUnits(s),0);
+    const tDef=TYPES.find(t=>t.k===type);
+    let tu=0,ti=0;
+    all.filter(s=>ids.includes(s.id)).forEach(s=>{
+      const u=availUnits(s);
+      tu+=u;
+      let interest;
+      if(iMode==='manual'){
+        const inp=document.querySelector(`.ii[data-id="${s.id}"]`);
+        const m=inp?+inp.value:0;
+        const totalStack=totalStackUnits(s);
+        const scaled=s.pni>0&&totalStack>0?Math.round(s.pni*u/totalStack):(totAv?Math.round(pnT*u/totAv):0);
+        interest=m>0?m:scaled;
+      } else {
+        const totalStack=totalStackUnits(s);
+        interest=s.pni>0&&totalStack>0?Math.round(s.pni*u/totalStack):(totAv?Math.round(pnT*u/totAv):0);
+      }
+      ti+=interest;
+    });
+    if(tu>0){totalUnits+=tu;pnInt+=ti;bd.push({n:tDef.n,u:tu,i:ti,pct});}
+  });
+
+  if(!totalUnits){alert('No available units for selected stacks / floor range.');return;}
+
+  const qAhead          =Math.max(0,clientQ-1);
+  const pnShareCalc     =pnCheque/Math.max(totalCheque,1); // raw PN share, matching Vela Bay
+  const totalMktInterest=pnInt/Math.max(pnShareCalc,0.01);
+  const rawComp         =qAhead*(totalMktInterest/totalCheque);
+  const effComp         =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnCheque,pnInt));
+  const consumed        =Math.min(effComp,totalUnits);
+  const left            =Math.max(0,totalUnits-consumed);
+  const chance          =Math.min(100,totalUnits>0?(left/totalUnits)*100:0);
+  const v               =verdict(chance);
+
+  const hero=document.getElementById('resHero');
+  hero.style.background=v.hb;hero.style.borderColor=v.c+'44';
+  const pe=document.getElementById('resPct');
+  pe.textContent=chance.toFixed(1)+'%';pe.style.color=v.c;
+  const ve=document.getElementById('resVerdict');
+  ve.textContent=v.l;ve.style.background=v.vb;ve.style.color=v.c;
+
+  // Plain-English story
+  const pnSharePct      =(pnCheque/Math.max(totalCheque,1)*100).toFixed(1); // raw, matches Vela Bay
+  const totalMktIntDisplay=Math.round(totalMktInterest);
+
+  let dropoutLines='';
+  bands.forEach(b=>{
+    const bandEnd=Math.min(b.to===9999?qAhead:b.to,qAhead);
+    const bandStart=Math.max(b.from,1);
+    if(bandEnd<bandStart)return;
+    const count=bandEnd-bandStart+1;
+    const kept=Math.round(count*(1-b.pct/100));
+    dropoutLines+='<div class="story-step-sub">Q'+bandStart+'–Q'+bandEnd+': '+count+' buyers, '+b.pct+'% drop out → <strong>'+kept+' stay</strong></div>';
+  });
+
+  let stackLines='';
+  ids.forEach(id=>{
+    const s=STACKS.find(x=>x.id===id);if(!s)return;
+    const totalStkFloors=totalStackUnits(s);
+    const avail=availUnits(s);
+    const scaledPni=s.pni>0&&totalStkFloors>0?Math.round(s.pni*avail/totalStkFloors):0;
+    const all=STACKS.filter(x=>x.type===s.type);
+    const totAv=all.reduce((n,x)=>n+availUnits(x),0);
+    const pnT=Math.round(pnQ*(PCT[s.type]||0)/100);
+    const autoPni=totAv?Math.round(pnT*avail/totAv):0;
+    const manualInp=document.querySelector(`.ii[data-id="${id}"]`);
+    const manualVal=manualInp?+manualInp.value:0;
+    const usedPni=iMode==='manual'&&manualVal>0?manualVal:(scaledPni>0?scaledPni:autoPni);
+    const dispId=s.displayId||s.id;
+    stackLines+='<div class="story-stack-row">'
+      +'<span class="story-stack-badge">Stack '+dispId+'</span>'
+      +'<span class="story-stack-detail">'+s.lbl+' · '+avail+' unit'+(avail!==1?'s':'')+' available · <strong>'+usedPni+' PN buyers</strong> interested</span>'
+      +'</div>';
+  });
+
+  document.getElementById('storyBox').innerHTML=`
+    <div class="story-step">
+      <div class="story-step-num">1</div>
+      <div class="story-step-body">
+        <div class="story-step-title">Who is ahead of your client?</div>
+        <p>Your client is <strong>Queue ${clientQ}</strong>. That means <strong>${qAhead} people</strong> go before them — from all agencies combined.</p>
+      </div>
+    </div>
+    <div class="story-step">
+      <div class="story-step-num">2</div>
+      <div class="story-step-body">
+        <div class="story-step-title">Not everyone shows up — applying dropout</div>
+        <p>Like restaurant reservations, some buyers won't follow through on launch day. After applying your dropout rates:</p>
+        ${dropoutLines}
+        <p style="margin-top:8px">Out of ${qAhead} buyers ahead, roughly <strong>${effComp} are real, committed competitors</strong> for your client's unit type.</p>
+      </div>
+    </div>
+    <div class="story-step">
+      <div class="story-step-num">3</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many of those want the same stacks?</div>
+        <p>From the PropNex heatmap, the total PN interest across the selected stacks is <strong>${pnInt} PN buyers</strong>. Since PropNex holds <strong>${pnSharePct}%</strong> of the market, the estimated total interest across all agencies is:</p>
+        <div class="story-formula">${pnInt} PN buyers ÷ ${pnSharePct}% = <strong>${totalMktIntDisplay} total buyers</strong> interested in these stacks</div>
+        <p style="margin-top:8px">That's <strong>${(totalMktInterest/totalCheque*100).toFixed(1)}%</strong> of all ${totalCheque} cheques. Applied to the ${effComp} effective buyers ahead → <strong>${consumed} of them likely want the same units.</strong></p>
+        <div style="margin-top:10px">${stackLines}</div>
+      </div>
+    </div>
+    <div class="story-step">
+      <div class="story-step-num">4</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many units are available?</div>
+        <p>Across the selected stacks with your client's floor preference, there are <strong>${totalUnits} available units</strong>.</p>
+      </div>
+    </div>
+    <div class="story-step${left<=0?' story-step-danger':''}">
+      <div class="story-step-num">5</div>
+      <div class="story-step-body">
+        <div class="story-step-title">How many units are left when your client's turn comes?</div>
+        <p><strong>${totalUnits} units</strong> minus <strong>${consumed} taken</strong> by buyers ahead = <strong style="color:${v.c}">${left} unit${left!==1?'s':''} remaining</strong> when your client reaches the counter.</p>
+        ${left<=0?'<p style="margin-top:8px;color:#e03131;font-weight:500">⚠ At this queue position, the selected units are likely fully sold out before your client\'s turn.</p>':''}
+      </div>
+    </div>
+    <div class="story-step">
+      <div class="story-step-num">6</div>
+      <div class="story-step-body">
+        <div class="story-step-title">The probability</div>
+        <p><strong>${left} remaining</strong> ÷ <strong>${totalUnits} total units</strong> = <strong style="color:${v.c}">${chance.toFixed(1)}% chance</strong> of securing a unit at Queue ${clientQ}.</p>
+        <p style="margin-top:6px;color:var(--muted);font-size:10px">Think of it like a bus with ${totalUnits} seats. ${consumed} people board before your client. There are likely <strong>${left} seats</strong> still free when they get on.</p>
+      </div>
+    </div>
+  `;
+
+  buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque);
+  document.getElementById('resSection').classList.remove('hidden');
+  document.getElementById('sensSection').classList.remove('hidden');
+  document.getElementById('resSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── SENSITIVITY ───────────────────────────────────────────────────────────────
+function buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque){
+  const tbody=document.getElementById('sensBody');
+  tbody.innerHTML='';
+  const step=50;
+  const start=Math.max(1,Math.floor(Math.max(1,clientQ-200)/step)*step);
+  for(let q=start;q<=clientQ+200;q+=step){
+    const qA  =Math.max(0,q-1);
+    const comp=Math.round(applyDropout(qA,totalCheque,pnQ,pnCheque,pnInt));
+    const left=Math.max(0,totalUnits-Math.min(comp,totalUnits));
+    const pct =totalUnits>0?Math.min(100,(left/totalUnits)*100):0;
+    const v   =verdict(pct);
+    const isC =q===clientQ;
+    const tr  =document.createElement('tr');
+    if(isC)tr.classList.add('hl');
+    tr.innerHTML=`
+      <td style="color:${isC?'var(--accent)':'var(--text)'};font-weight:${isC?600:400}">
+        ${q}${isC?' <span style="font-size:9px;opacity:.6"> ← your client</span>':''}
+      </td>
+      <td style="color:var(--muted)">${comp}</td>
+      <td>${left} <span style="color:var(--muted)">/ ${totalUnits}</span></td>
+      <td style="color:${v.c};font-weight:600">${pct.toFixed(1)}%</td>
+      <td><div class="pb-wrap">
+        <div class="pb" style="width:${Math.max(2,pct).toFixed(0)}px;background:${v.c};opacity:.65"></div>
+        <span style="color:${v.c};font-size:10px">${v.l}</span>
+      </div></td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('totalCheque').addEventListener('input',()=>syncShare());
+document.getElementById('pnCheque').addEventListener('input',  ()=>syncShare());
+document.getElementById('pnShare').addEventListener('input',   ()=>syncCheque());
+document.getElementById('priority').addEventListener('input',  ()=>refreshAutoVals());
+document.getElementById('bulk').addEventListener('input',      ()=>refreshAutoVals());
+
+syncCheque();
+buildTypeChips();
+renderBands();
+setMode('auto');
+</script>
+
+</body>
+</html>
