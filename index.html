@@ -600,6 +600,15 @@ function calculate(){
   const pnSharePct      =(pnCheque/Math.max(totalCheque,1)*100).toFixed(1); // raw, matches Vela Bay
   const totalMktIntDisplay=Math.round(totalMktInterest);
 
+  // Total buyers surviving dropout (before stack filtering) — for clear story display
+  let effAllBuyersRaw=0;
+  bands.forEach(b=>{
+    const s=Math.max(b.from,1),e=Math.min(b.to,qAhead);
+    if(e<s)return;
+    effAllBuyersRaw+=(e-s+1)*(1-b.pct/100);
+  });
+  const effAllBuyersDisplay=Math.round(effAllBuyersRaw);
+
   let dropoutLines='';
   bands.forEach(b=>{
     const bandEnd=Math.min(b.to===9999?qAhead:b.to,qAhead);
@@ -642,18 +651,18 @@ function calculate(){
       <div class="story-step-num">2</div>
       <div class="story-step-body">
         <div class="story-step-title">Not everyone shows up — applying dropout</div>
-        <p>Like restaurant reservations, some buyers won't follow through on launch day. After applying your dropout rates:</p>
+        <p>Like restaurant reservations, some buyers won't follow through on launch day. Of the <strong>${qAhead} people</strong> ahead of your client, after applying dropout rates by queue band:</p>
         ${dropoutLines}
-        <p style="margin-top:8px">Out of ${qAhead} buyers ahead, roughly <strong>${effComp} are real, committed competitors</strong> for your client's unit type.</p>
+        <p style="margin-top:8px">That leaves roughly <strong>${effAllBuyersDisplay} buyers</strong> who are likely to show up and actually purchase — across <em>all unit types</em>.</p>
       </div>
     </div>
     <div class="story-step">
       <div class="story-step-num">3</div>
       <div class="story-step-body">
         <div class="story-step-title">How many of those want the same stacks?</div>
-        <p>From the PropNex heatmap, the total PN interest across the selected stacks is <strong>${pnInt} PN buyers</strong>. Since PropNex holds <strong>${pnSharePct}%</strong> of the market, the estimated total interest across all agencies is:</p>
+        <p>Not all ${effAllBuyersDisplay} buyers want what your client wants. From the PropNex heatmap, the total PN interest across the selected stacks is <strong>${pnInt} PN buyers</strong>. Since PropNex holds <strong>${pnSharePct}%</strong> of the market, the estimated total interest across all agencies is:</p>
         <div class="story-formula">${pnInt} PN buyers ÷ ${pnSharePct}% = <strong>${totalMktIntDisplay} total buyers</strong> interested in these stacks</div>
-        <p style="margin-top:8px">That's <strong>${(totalMktInterest/totalCheque*100).toFixed(1)}%</strong> of all ${totalCheque} cheques. Applied to the ${effComp} effective buyers ahead → <strong>${consumed} of them likely want the same units.</strong></p>
+        <p style="margin-top:8px">That's <strong>${(totalMktInterest/totalCheque*100).toFixed(1)}%</strong> of all ${totalCheque} cheques. Applied to the ${effAllBuyersDisplay} buyers who show up → <strong>${effComp} of them are competing for the same units as your client.</strong></p>
         <div style="margin-top:10px">${stackLines}</div>
       </div>
     </div>
