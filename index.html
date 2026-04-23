@@ -138,14 +138,14 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
       <input type="number" id="pnShare" value="54.7" min="1" max="100" step="0.1" oninput="syncCheque()">
     </div>
     <div class="divider"></div>
-    <div class="note" style="margin-bottom:12px">Pre-queue buyers purchase <strong>before</strong> Queue 1 opens. Enter confirmed total units sold for each group — a 5% dropout is applied to all three. Bulk is restricted to fl7+, Loyalty to fl9+.</div>
+    <div class="note" style="margin-bottom:12px">These buyers purchase <strong>before</strong> Queue 1 opens and reduce available units first. All groups have 5% dropout applied.</div>
     <div class="ig">
       <label>Developer / Staff VIP <span style="font-size:9px;color:var(--muted)">(confirmed units sold · no floor restriction)</span></label>
-      <input type="number" id="devVip" value="0" min="0" oninput="refreshAutoVals()">
+      <input type="number" id="devVip" value="13" min="0" oninput="refreshAutoVals()">
     </div>
     <div class="ir">
-      <div class="ig"><label>Bulk Purchasers <span style="font-size:9px;color:var(--muted)">(total sold · fl7+ only)</span></label><input type="number" id="bulkPni" value="0" min="0" oninput="refreshAutoVals()"></div>
-      <div class="ig"><label>Loyalty / Priority <span style="font-size:9px;color:var(--muted)">(total sold · fl9+ only)</span></label><input type="number" id="loyaltyPni" value="0" min="0" oninput="refreshAutoVals()"></div>
+      <div class="ig"><label>Bulk Purchasers <span style="font-size:9px;color:var(--muted)">(total market interest · fl7+ only)</span></label><input type="number" id="bulkPni" value="55" min="0" oninput="refreshAutoVals()"></div>
+      <div class="ig"><label>Loyalty / Priority <span style="font-size:9px;color:var(--muted)">(total market interest · fl9+ only)</span></label><input type="number" id="loyaltyPni" value="240" min="0" oninput="refreshAutoVals()"></div>
     </div>
     <div class="note" id="preQueueSummary">Pre-queue est. units consumed: <strong>0</strong></div>
   </div>
@@ -161,13 +161,12 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
 
   <div class="card full">
     <div class="ct">Stack Selection &amp; PN Interest</div>
-    <div class="note" style="margin-bottom:14px">Pre-filled with each stack's actual residential floors per elevation chart. Sky Terrace floors automatically excluded. Dual-use stacks (e.g. Stack 16 = 1BR on fl2, 2BR Prem on fl3–16) appear as separate entries per type.</div>
     <div class="mode-row">
       <div class="mode-btn active" id="modeAutoBtn"  onclick="setMode('auto')">Heatmap data</div>
       <div class="mode-btn"        id="modeManualBtn" onclick="setMode('manual')">Manual override</div>
     </div>
-    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">PN interest loaded from PropNex heatmap data. Scaled down automatically if client floor range is narrower than the full stack. Switch to Manual to override any stack.</div>
-    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Enter exact PN interest to override. Leave blank to use the heatmap figure for that stack.</div>
+    <div id="autoNote"   class="note hidden" style="margin-bottom:14px">Using PropNex heatmap pni per stack. Scales down if client floor range is narrower.</div>
+    <div id="manualNote" class="note hidden" style="margin-bottom:14px">Override PN interest per stack. Leave blank to use heatmap figure.</div>
     <div style="overflow-x:auto">
       <table class="stack-table">
         <thead>
@@ -186,7 +185,7 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
 
   <div class="card full">
     <div class="ct">Dropout Rate by Queue Band</div>
-    <div class="note" style="margin-bottom:16px">% of ALL buyers (all agencies) in each band who don't end up purchasing. Applied before PN share to get effective competition.</div>
+    <div class="note" style="margin-bottom:16px">% of buyers in each queue band who don't end up purchasing on launch day.</div>
     <div style="overflow-x:auto">
       <table class="stack-table">
         <thead><tr><th>Band</th><th>Queue From</th><th>Queue To</th><th>Dropout %</th><th style="width:32px"></th></tr></thead>
@@ -207,21 +206,21 @@ input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45
       <div class="rlbl">Estimated chance of securing a unit</div>
       <div class="rverdict" id="resVerdict"></div>
     </div>
-    <div class="story" id="storyBox"></div>
+    <!-- Simple breakdown table -->
+    <table class="stack-table" id="breakdownTable" style="margin-bottom:16px">
+      <tbody id="breakdownBody"></tbody>
+    </table>
   </div>
 
   <div class="card full hidden" id="sensSection">
-    <div class="ct">How Does Queue Position Affect the Odds?</div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.7">
-      This table shows what your client's chances would be at different queue numbers, so you can set realistic expectations based on where they actually land.
-    </p>
+    <div class="ct">Sensitivity — Odds by Queue Number</div>
     <div style="overflow-x:auto">
       <table class="sens-table">
-        <thead><tr><th>Queue #</th><th>Est. Competing Buyers</th><th>Units Still Available</th><th>Chance</th><th style="width:180px">Verdict</th></tr></thead>
+        <thead><tr><th>Queue #</th><th>Competing Buyers</th><th>Units Left</th><th>Chance</th><th style="width:160px"></th></tr></thead>
         <tbody id="sensBody"></tbody>
       </table>
     </div>
-    <div style="margin-top:14px" class="note">Showing ±200 queue positions around your client in steps of 50. Dropout rates applied throughout.</div>
+    <div style="margin-top:10px" class="note">±200 queue positions around your client, steps of 50.</div>
   </div>
 
 </div>
@@ -364,54 +363,49 @@ function totalStackUnits(s) {
 function selTypes()   { return [...document.querySelectorAll('#typeGrid .chip.active')].map(c=>c.dataset.k); }
 function checkedIds() { return [...document.querySelectorAll('.scheck:checked')].map(c=>c.dataset.id); }
 function getPNQ()          { return Math.max(0,+document.getElementById('pnCheque').value||0); }
-// Count units in currently-checked stacks at or above a minimum floor
-function eligibleUnits(minFloor) {
-  const ids = checkedIds();
-  if (!ids.length) {
-    // If no stacks selected yet, count all stacks of selected types
-    const types = selTypes();
-    return STACKS
-      .filter(s => types.includes(s.type))
-      .reduce((n, s) => {
-        let c = 0;
-        const lo = Math.max(s.fl[0], minFloor);
-        const hi = s.fl[1];
-        for (let f = lo; f <= hi; f++) if (!s.exclude.includes(f)) c++;
-        return n + c;
-      }, 0);
-  }
-  return STACKS
-    .filter(s => ids.includes(s.id))
-    .reduce((n, s) => {
-      let c = 0;
-      const lo = Math.max(s.fl[0], minFloor);
-      const hi = s.fl[1];
-      for (let f = lo; f <= hi; f++) if (!s.exclude.includes(f)) c++;
-      return n + c;
-    }, 0);
-}
-
 function calcPreQueue() {
   const devVip     = +document.getElementById('devVip').value||0;
   const bulkRaw    = +document.getElementById('bulkPni').value||0;
   const loyaltyRaw = +document.getElementById('loyaltyPni').value||0;
 
-  // Dev/VIP: no floor restriction, apply 5% dropout
+  // Dev/VIP: confirmed units sold, 5% dropout
   const devVipEff = Math.round(devVip * 0.95);
 
-  // Bulk: floor 7+ restriction — cap entered amount against eligible units fl7+
-  const bulkEligible = eligibleUnits(7);
-  const bulkCapped   = Math.min(bulkRaw, bulkEligible);
-  const bulkEff      = Math.round(bulkCapped * 0.95);
+  // Bulk & Loyalty: total market interest (all agencies), unknown which stacks.
+  // Distribution method: use PN-interest-weighted floor proportion.
+  // For each stack, weight its pni by the fraction of its units on eligible floors.
+  // This reflects actual demand concentration, not just raw floor counts.
+  //
+  //   Bulk proportion    = Σ(pni × fl7+/total floors) for selected stacks
+  //                      ÷ Σ(pni × fl7+/total floors) for all project stacks
+  //
+  //   Loyalty proportion = same but fl9+
 
-  // Loyalty: floor 9+ restriction — cap against eligible units fl9+
-  const loyaltyEligible = eligibleUnits(9);
-  const loyaltyCapped   = Math.min(loyaltyRaw, loyaltyEligible);
-  const loyaltyEff      = Math.round(loyaltyCapped * 0.95);
+  function weightedPni(stacks, minFloor) {
+    return stacks.reduce((n, s) => {
+      const allFl  = s.fl[1] - s.fl[0] + 1 - s.exclude.length;
+      const eligFl = Math.max(0, s.fl[1] - Math.max(s.fl[0], minFloor) + 1 - s.exclude.filter(f=>f>=Math.max(s.fl[0],minFloor)).length);
+      return n + (allFl > 0 ? (s.pni||0) * eligFl / allFl : 0);
+    }, 0);
+  }
+
+  const ids = checkedIds();
+  const sel = ids.length ? STACKS.filter(s => ids.includes(s.id)) : [];
+
+  const projWtFl7 = weightedPni(STACKS, 7);
+  const projWtFl9 = weightedPni(STACKS, 9);
+  const selWtFl7  = weightedPni(sel, 7);
+  const selWtFl9  = weightedPni(sel, 9);
+
+  const bulkProp    = projWtFl7 > 0 ? selWtFl7 / projWtFl7 : 0;
+  const loyaltyProp = projWtFl9 > 0 ? selWtFl9 / projWtFl9 : 0;
+
+  const bulkEff    = Math.round(bulkRaw    * bulkProp    * 0.95);
+  const loyaltyEff = Math.round(loyaltyRaw * loyaltyProp * 0.95);
 
   return { devVip, devVipEff,
-           bulkRaw, bulkCapped, bulkEligible, bulkEff,
-           loyaltyRaw, loyaltyCapped, loyaltyEligible, loyaltyEff,
+           bulkRaw, selWtFl7: selWtFl7.toFixed(1), projWtFl7: projWtFl7.toFixed(1), bulkProp, bulkEff,
+           loyaltyRaw, selWtFl9: selWtFl9.toFixed(1), projWtFl9: projWtFl9.toFixed(1), loyaltyProp, loyaltyEff,
            total: devVipEff + bulkEff + loyaltyEff };
 }
 function verdict(p) {
@@ -536,15 +530,16 @@ function updatePreQueueSummary() {
   const pq = calcPreQueue();
   const el = document.getElementById('preQueueSummary');
   if (!el) return;
-  const bulkCapNote   = pq.bulkRaw > pq.bulkEligible ? ` <span style="color:#e67700">(capped at ${pq.bulkEligible} eligible fl7+)</span>` : ` <span style="color:var(--muted)">(${pq.bulkEligible} units eligible fl7+)</span>`;
-  const loyCapNote    = pq.loyaltyRaw > pq.loyaltyEligible ? ` <span style="color:#e67700">(capped at ${pq.loyaltyEligible} eligible fl9+)</span>` : ` <span style="color:var(--muted)">(${pq.loyaltyEligible} units eligible fl9+)</span>`;
   el.innerHTML = `
-    Est. pre-queue units consumed (after 5% dropout):
-    <strong>${pq.total}</strong>
-    <span style="font-size:9px;display:block;margin-top:4px">
-      Dev/VIP: ${pq.devVip} sold → <strong>${pq.devVipEff}</strong> &nbsp;|&nbsp;
-      Bulk: ${pq.bulkRaw} sold${bulkCapNote} → <strong>${pq.bulkEff}</strong> &nbsp;|&nbsp;
-      Loyalty: ${pq.loyaltyRaw} sold${loyCapNote} → <strong>${pq.loyaltyEff}</strong>
+    Est. pre-queue units consumed: <strong>${pq.total}</strong>
+    <span style="font-size:9px;color:var(--muted);display:block;margin-top:4px">
+      Dev/VIP: ${pq.devVip} confirmed sold × 95% = <strong>${pq.devVipEff}</strong>
+    </span>
+    <span style="font-size:9px;color:var(--muted);display:block;margin-top:2px">
+      Bulk: ${pq.bulkRaw} total interest × ${(pq.bulkProp*100).toFixed(1)}% demand share (fl7+) × 95% = <strong>${pq.bulkEff}</strong>
+    </span>
+    <span style="font-size:9px;color:var(--muted);display:block;margin-top:2px">
+      Loyalty: ${pq.loyaltyRaw} total interest × ${(pq.loyaltyProp*100).toFixed(1)}% demand share (fl9+) × 95% = <strong>${pq.loyaltyEff}</strong>
     </span>`;
 }
 
@@ -658,12 +653,9 @@ function calculate(){
   const rawComp         =qAhead*(totalMktInterest/totalCheque);
   const effComp         =Math.round(applyDropout(qAhead,totalCheque,pnQ,pnCheque,pnInt));
 
-  // Pre-queue buyers consume units BEFORE public queue opens.
-  // They buy across the WHOLE project (863 units), so only a proportional
-  // share of their purchases land on the selected stacks/types.
-  const TOTAL_PROJECT_UNITS = 863;
-  const selectedProportion  = totalUnits / TOTAL_PROJECT_UNITS;
-  const preQueueConsumed    = Math.min(Math.round(preQueueUnits * selectedProportion), totalUnits);
+  // Pre-queue buyers are already scoped to the selected stacks via eligibleUnits()
+  // so consume the capped effective amount directly — no further proportional scaling needed
+  const preQueueConsumed    = Math.min(preQueueUnits, totalUnits);
   const unitsAfterPreQueue  = Math.max(0, totalUnits - preQueueConsumed);
   // Public queue buyers compete for what remains
   const publicConsumed  = Math.min(effComp, unitsAfterPreQueue);
@@ -722,76 +714,29 @@ function calculate(){
       +'</div>';
   });
 
-  document.getElementById('storyBox').innerHTML=`
-    <div class="story-step">
-      <div class="story-step-num">1</div>
-      <div class="story-step-body">
-        <div class="story-step-title">Pre-queue buyers go first</div>
-        ${pq.total>0
-          ? `<p>Before public Queue 1 is called, an estimated <strong>${pq.total} unit${pq.total!==1?'s':''}</strong> are consumed by pre-queue buyers (after 5% dropout applied to each group):</p>
-             ${pq.devVip>0?`<div class="story-step-sub">Developer / Staff VIP: ${pq.devVip} confirmed sold × 95% = <strong>${pq.devVipEff} units consumed</strong></div>`:''}
-             ${pq.bulkRaw>0?`<div class="story-step-sub">Bulk Purchasers (fl7+ only): ${pq.bulkRaw} sold${pq.bulkRaw>pq.bulkEligible?`, capped to ${pq.bulkEligible} eligible units`:''} × 95% = <strong>${pq.bulkEff} units consumed</strong></div>`:''}
-             ${pq.loyaltyRaw>0?`<div class="story-step-sub">Loyalty / Priority (fl9+ only): ${pq.loyaltyRaw} sold${pq.loyaltyRaw>pq.loyaltyEligible?`, capped to ${pq.loyaltyEligible} eligible units`:''} × 95% = <strong>${pq.loyaltyEff} units consumed</strong></div>`:''}
-             <p style="margin-top:8px">That leaves <strong>${unitsAfterPreQueue} unit${unitsAfterPreQueue!==1?'s':''}</strong> available for the public queue.</p>`
-          : `<p>No pre-queue buyers entered. All <strong>${totalUnits} units</strong> are available for the public queue.</p>`
-        }
-      </div>
-    </div>
-    <div class="story-step">
-      <div class="story-step-num">2</div>
-      <div class="story-step-body">
-        <div class="story-step-title">Who is ahead of your client in the public queue?</div>
-        <p>Your client is <strong>Queue ${clientQ}</strong>. That means <strong>${qAhead} people</strong> go before them in the public queue — from all agencies combined.</p>
-      </div>
-    </div>
-    <div class="story-step">
-      <div class="story-step-num">3</div>
-      <div class="story-step-body">
-        <div class="story-step-title">Not everyone shows up — applying dropout</div>
-        <p>Like restaurant reservations, some buyers won't follow through on launch day. Of the <strong>${qAhead} people</strong> ahead of your client, after applying dropout rates by queue band:</p>
-        ${dropoutLines}
-        <p style="margin-top:8px">That leaves roughly <strong>${effAllBuyersDisplay} buyers</strong> who are likely to show up and actually purchase — across <em>all unit types</em>.</p>
-      </div>
-    </div>
-    <div class="story-step">
-      <div class="story-step-num">4</div>
-      <div class="story-step-body">
-        <div class="story-step-title">How many of those want the same stacks?</div>
-        <p>Not all ${effAllBuyersDisplay} buyers want what your client wants. From the PropNex heatmap, the total PN interest across the selected stacks is <strong>${pnInt} PN buyers</strong>. Since PropNex holds <strong>${pnSharePct}%</strong> of the market, the estimated total interest across all agencies is:</p>
-        <div class="story-formula">${pnInt} PN buyers ÷ ${pnSharePct}% = <strong>${totalMktIntDisplay} total buyers</strong> interested in these stacks</div>
-        <p style="margin-top:8px">That's <strong>${(totalMktInterest/totalCheque*100).toFixed(1)}%</strong> of all ${totalCheque} cheques. Applied to the ${effAllBuyersDisplay} buyers who show up → <strong>${effComp} of them are competing for the same units as your client.</strong></p>
-        <div style="margin-top:10px">${stackLines}</div>
-      </div>
-    </div>
-    <div class="story-step">
-      <div class="story-step-num">5</div>
-      <div class="story-step-body">
-        <div class="story-step-title">How many units are available for the public queue?</div>
-        ${preQueueUnits>0
-          ? `<p>Pre-queue buyers purchase across the <strong>whole project (${TOTAL_PROJECT_UNITS} units)</strong>, not just your client's selected stacks. Only a proportional share of their purchases affect these stacks:</p>
-             <div class="story-formula">${preQueueUnits} pre-queue units × (${totalUnits} ÷ ${TOTAL_PROJECT_UNITS}) = <strong>${preQueueConsumed} units consumed</strong> from selected stacks</div>
-             <p>${totalUnits} units − ${preQueueConsumed} pre-queue = <strong>${unitsAfterPreQueue} unit${unitsAfterPreQueue!==1?'s':''} remaining</strong> for the public queue.</p>`
-          : `<p>No pre-queue buyers entered. All <strong>${totalUnits} units</strong> go to the public queue.</p>`
-        }
-      </div>
-    </div>
-    <div class="story-step${left<=0?' story-step-danger':''}">
-      <div class="story-step-num">6</div>
-      <div class="story-step-body">
-        <div class="story-step-title">How many units are left when your client's turn comes?</div>
-        <p><strong>${unitsAfterPreQueue} unit${unitsAfterPreQueue!==1?'s':''}</strong> for public queue minus <strong>${publicConsumed} taken</strong> by buyers ahead = <strong style="color:${v.c}">${left} unit${left!==1?'s':''} remaining</strong> when your client reaches the counter.</p>
-        ${left<=0?'<p style="margin-top:8px;color:#e03131;font-weight:500">⚠ At this queue position, the selected units are likely fully sold out before your client\'s turn.</p>':''}
-      </div>
-    </div>
-    <div class="story-step">
-      <div class="story-step-num">7</div>
-      <div class="story-step-body">
-        <div class="story-step-title">The probability</div>
-        <p><strong>${left} remaining</strong> ÷ <strong>${totalUnits} total units</strong> = <strong style="color:${v.c}">${chance.toFixed(1)}% chance</strong> of securing a unit at Queue ${clientQ}.</p>
-        <p style="margin-top:6px;color:var(--muted);font-size:10px">Think of it like a bus with ${totalUnits} seats. ${preQueueUnits>0?`${preQueueConsumed} are reserved before boarding even starts. Of the remaining ${unitsAfterPreQueue}, `:`Of the ${totalUnits} seats, `}${publicConsumed} are taken by people who board before your client. There are likely <strong>${left} seat${left!==1?'s':''}</strong> still free when they get on.</p>
-      </div>
-    </div>
-  `;
+  // Build simple breakdown table
+  const rows = [
+    { label: 'Total units in selected stacks',            val: totalUnits,          sub: '' },
+    { label: '− Dev/VIP (confirmed sold × 95%)',          val: `-${pq.devVipEff}`,  sub: `${pq.devVip} sold`, hide: pq.devVip===0 },
+    { label: `− Bulk buyers (fl7+, ${(pq.bulkProp*100).toFixed(1)}% share × 95%)`,  val: `-${pq.bulkEff}`,  sub: `${pq.bulkRaw} total interest`, hide: pq.bulkRaw===0 },
+    { label: `− Loyalty buyers (fl9+, ${(pq.loyaltyProp*100).toFixed(1)}% share × 95%)`, val: `-${pq.loyaltyEff}`, sub: `${pq.loyaltyRaw} total interest`, hide: pq.loyaltyRaw===0 },
+    { label: '= Units left for public queue',             val: unitsAfterPreQueue,  sub: '', divider: true },
+    { label: `− ${effComp} competing buyers ahead (Q1–Q${clientQ-1}, after dropout)`, val: `-${publicConsumed}`, sub: `${qAhead} ahead → ${effAllBuyersDisplay} show up → ${effComp} want same stacks` },
+    { label: '= Units remaining when your client\u2019s turn comes', val: left, sub: '', divider: true, highlight: true, color: v.c },
+  ];
+
+  document.getElementById('breakdownBody').innerHTML = rows
+    .filter(r => !r.hide)
+    .map(r => `
+      <tr style="${r.divider?'border-top:1.5px solid var(--border)':''}">
+        <td style="color:${r.highlight?r.color:'var(--muted)'};${r.highlight?'font-weight:600':''}">
+          ${r.label}
+          ${r.sub?`<span style="display:block;font-size:9px;color:var(--muted);margin-top:2px">${r.sub}</span>`:''}
+        </td>
+        <td style="text-align:right;font-weight:600;color:${r.highlight?r.color:(typeof r.val==='string'&&r.val.startsWith('-')?'#e03131':'var(--text)')};white-space:nowrap">
+          ${r.val}
+        </td>
+      </tr>`).join('');
 
   buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque,preQueueUnits);
   document.getElementById('resSection').classList.remove('hidden');
@@ -803,10 +748,7 @@ function calculate(){
 function buildSens(pnQ,pnInt,totalUnits,clientQ,totalCheque,pnCheque,preQueueUnits){
   const tbody=document.getElementById('sensBody');
   tbody.innerHTML='';
-  const TOTAL_PROJECT_UNITS = 863;
-  const selectedProportion  = totalUnits / TOTAL_PROJECT_UNITS;
-  const preQueueConsumedSens = Math.min(Math.round((preQueueUnits||0) * selectedProportion), totalUnits);
-  const unitsForPublic=Math.max(0,totalUnits-preQueueConsumedSens);
+  const unitsForPublic=Math.max(0,totalUnits-(preQueueUnits||0));
   const step=50;
   const start=Math.max(1,Math.floor(Math.max(1,clientQ-200)/step)*step);
   for(let q=start;q<=clientQ+200;q+=step){
